@@ -26,13 +26,13 @@
 | PII redaction | [evidence/05-pii-redaction.txt](evidence/05-pii-redaction.txt) | input PII giả → log đã che email/điện thoại/CCCD/thẻ |
 | Trace list | [evidence/06-trace-list.png](evidence/06-trace-list.png) | Langfuse, project cá nhân |
 | Trace waterfall | [evidence/07-trace-waterfall.png](evidence/07-trace-waterfall.png) | trace `c4805a73ae932e8e191f1e040efb8322` |
-| Trace metadata | [evidence/08-trace-metadata.png](evidence/08-trace-metadata.png) | correlation_id, prompt, token, cost |
+| Trace metadata | [evidence/08a-trace-metadata.png](evidence/08a-trace-metadata.png), [evidence/08b-trace-metadata.png](evidence/08b-trace-metadata.png) | 08a: root metadata (correlation_id, prompt name/label/version); 08b: generation (model, Prompt day13-chat v2, 138 tokens, $0.001542). Dòng public key do SDK tự thêm đã được che |
 | Prompt versions | [evidence/09-prompt-versions.png](evidence/09-prompt-versions.png) | `day13-chat` v1/v2 |
-| Prompt rollback | [evidence/10-prompt-rollback.png](evidence/10-prompt-rollback.png) | `production` v2 → v1 |
+| Prompt rollback | [evidence/10a-prompt-promote.png](evidence/10a-prompt-promote.png), [evidence/10b-prompt-rollback.png](evidence/10b-prompt-rollback.png) | 10a: `production` ở v2 sau promote; 10b: `production` về v1 sau rollback |
 | Dashboard runtime | [evidence/11-dashboard-overview.png](evidence/11-dashboard-overview.png) | 6 panel, gồm practice `rag_slow` |
 | Incident metric | [evidence/12-incident-metric.png](evidence/12-incident-metric.png) | dashboard sau challenge |
 | Incident log | [evidence/13-incident-log.jsonl](evidence/13-incident-log.jsonl) | 5 request `monitoring` |
-| Incident trace | [evidence/14-incident-trace.txt](evidence/14-incident-trace.txt), [evidence/14-incident-trace.png](evidence/14-incident-trace.png) | trace `e8bdcbad5eb1fa2c365cd19efe0020c2` |
+| Incident trace | [evidence/14-incident-trace.txt](evidence/14-incident-trace.txt), [evidence/14-incident-trace.png](evidence/14-incident-trace.png) | trace `e8bdcbad5eb1fa2c365cd19efe0020c2`: span `retrieval` 2.50 s / 2.66 s, `correlation_id=req-8e311a56` |
 | Incident recovery | [evidence/15-incident-recovery.txt](evidence/15-incident-recovery.txt) | sau khi tắt incident |
 
 ## 3. Kết quả kỹ thuật
