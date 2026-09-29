@@ -8,7 +8,7 @@
 - **MSSV:** 2A202602570
 - **Lớp:** K4-L3A
 - **Repository URL:** https://github.com/vuxjqk/K4-L3-DAY13-TranAnhVu-2A202602570-Monitoring-LLMOps
-- **Commit SHA cuối:** `031219ca57b7762aa941443f1bb106569f7a0e36` (commit chứa toàn bộ source và evidence; commit ngay sau chỉ ghi SHA này vào report. SHA nộp LMS là HEAD trên `main` sau khi push)
+- **Commit SHA cuối:** `beaf8d97efc62b3a4549a08bf068b7a59189f2ba` (commit chứa toàn bộ source, evidence và checklist; commit ngay sau chỉ ghi SHA này vào report. SHA nộp LMS là HEAD trên `main` sau khi push)
 - **Challenge ID:** `day13-k4-l3a-monitoring-llmops-v1`
 - **Tên project Langfuse cá nhân:** `day13-k4-l3a-2A202602570`
 
