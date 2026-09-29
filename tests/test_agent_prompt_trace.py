@@ -20,12 +20,31 @@ class RecordingLangfuseClient:
     def __init__(self) -> None:
         self.prompt = ManagedPrompt()
         self.span_updates: list[dict] = []
+        self.observations: list[RecordingObservation] = []
 
     def get_prompt(self, name: str, **kwargs):
         return self.prompt
 
     def update_current_span(self, **kwargs) -> None:
         self.span_updates.append(kwargs)
+
+    @contextmanager
+    def start_as_current_observation(self, **kwargs):
+        observation = RecordingObservation(kwargs)
+        self.observations.append(observation)
+        yield observation
+
+    def get_current_trace_id(self) -> str:
+        return "trace-abc"
+
+
+class RecordingObservation:
+    def __init__(self, start_kwargs: dict) -> None:
+        self.start_kwargs = start_kwargs
+        self.updates: list[dict] = []
+
+    def update(self, **kwargs) -> None:
+        self.updates.append(kwargs)
 
 
 def test_agent_records_prompt_version_with_v4_observation_api(monkeypatch) -> None:
@@ -45,7 +64,7 @@ def test_agent_records_prompt_version_with_v4_observation_api(monkeypatch) -> No
     monkeypatch.setattr(agent_module, "propagate_attributes", record_attributes)
 
     agent = agent_module.LabAgent()
-    agent_module.LabAgent.run.__wrapped__(
+    result = agent_module.LabAgent.run.__wrapped__(
         agent,
         user_id="student-01",
         feature="qa",
@@ -67,3 +86,35 @@ def test_agent_records_prompt_version_with_v4_observation_api(monkeypatch) -> No
     assert span_update["version"] == "3"
     assert propagated[0]["metadata"]["correlation_id"] == "req-12345678"
     assert propagated[-1]["prompt"] is client.prompt
+
+
+def test_agent_emits_retrieval_and_generation_child_observations(monkeypatch) -> None:
+    client = RecordingLangfuseClient()
+    monkeypatch.setattr(agent_module, "get_langfuse_client", lambda: client)
+    monkeypatch.setattr(agent_module, "tracing_enabled", lambda: True)
+
+    agent = agent_module.LabAgent()
+    result = agent_module.LabAgent.run.__wrapped__(
+        agent,
+        user_id="student-01",
+        feature="qa",
+        session_id="session-01",
+        message="Refund for a@b.com?",
+        correlation_id="req-12345678",
+    )
+
+    retrieval, generation = client.observations
+    assert retrieval.start_kwargs["as_type"] == "retriever"
+    assert generation.start_kwargs["as_type"] == "generation"
+    assert generation.start_kwargs["model"] == agent.model
+    assert generation.start_kwargs["prompt"] is client.prompt
+
+    gen_update = generation.updates[-1]
+    assert gen_update["usage_details"]["input"] == result.tokens_in
+    assert gen_update["usage_details"]["output"] == result.tokens_out
+    assert sum(gen_update["cost_details"].values()) > 0
+    assert result.trace_id == "trace-abc"
+
+    # No raw PII may be sent to Langfuse in any observation payload.
+    assert "a@b.com" not in repr([o.start_kwargs for o in client.observations])
+    assert "a@b.com" not in repr([o.updates for o in client.observations])

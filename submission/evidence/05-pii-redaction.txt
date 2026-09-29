@@ -1,0 +1,20 @@
+# PII redaction evidence — du lieu GIA dung de test (khong phai PII that)
+## Input gui toi POST /chat (x-request-id: req-00005115)
+Test PII gia: email test.student@example.com, phone 090 123 4567, CCCD 001099012345, card 4111 1111 1111 1111
+
+## Log ghi vao data/logs.jsonl cho correlation_id req-00005115
+{"service": "api", "payload": {"message_preview": "Test PII gia: email [REDACTED_EMAIL], phone [REDACTED_PHONE_VN], CCCD [REDACTED_..."}, "event": "request_received", "correlation_id": "req-00005115", "session_id": "pii-s1", "env": "dev", "model": "claude-sonnet-4-5", "feature": "qa", "user_id_hash": "a268fdb664fc", "level": "info", "ts": "2026-09-29T08:34:27.249779Z"}
+{"service": "api", "latency_ms": 154, "ttft_ms": 50, "tokens_in": 47, "tokens_out": 80, "cost_usd": 0.001341, "quality_score": 0.8, "trace_id": "e5c0e7f5e5e9c2e97f2b5ad3d8fbd50e", "tool_name": "retrieval", "tool_success": true, "payload": {"answer_preview": "Starter answer. You should improve this output logic and add better quality chec..."}, "event": "response_sent", "correlation_id": "req-00005115", "session_id": "pii-s1", "env": "dev", "model": "claude-sonnet-4-5", "feature": "qa", "user_id_hash": "a268fdb664fc", "level": "info", "ts": "2026-09-29T08:34:27.411334Z"}
+
+## Kiem tra: so lan xuat hien gia tri tho trong data/logs.jsonl
+test.student@example.com -> 0
+090 123 4567 -> 0
+001099012345 -> 0
+4111 1111 1111 1111 -> 0
+
+## Input 2 (x-request-id: req-00005116): CCCD 001099012345, card 4111 1111 1111 1111
+{"service": "api", "payload": {"message_preview": "CCCD [REDACTED_CCCD], card [REDACTED_CREDIT_CARD]"}, "event": "request_received", "correlation_id": "req-00005116", "session_id": "pii-s1", "env": "dev", "model": "claude-sonnet-4-5", "feature": "qa", "user_id_hash": "a268fdb664fc", "level": "info", "ts": "2026-09-29T08:34:36.354913Z"}
+
+## Kiem tra lai sau input 2
+001099012345 -> 0
+4111 1111 1111 1111 -> 0

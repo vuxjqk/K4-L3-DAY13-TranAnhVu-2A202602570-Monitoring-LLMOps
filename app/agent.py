@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 
 from . import metrics
-from .mock_llm import FakeLLM
+from .mock_llm import FakeLLM, FakeResponse
 from .mock_rag import retrieve
 from .pii import hash_user_id, summarize_text
 from .prompt_management import resolve_prompt
@@ -21,6 +21,7 @@ class AgentResult:
     tokens_out: int
     cost_usd: float
     quality_score: float
+    trace_id: str | None = None
 
 
 class LabAgent:
@@ -51,7 +52,7 @@ class LabAgent:
             },
         ):
             started = time.perf_counter()
-            docs = retrieve(message)
+            docs = self._traced_retrieve(langfuse_client, message)
             prompt = resolve_prompt(
                 langfuse_client,
                 feature=feature,
@@ -71,13 +72,11 @@ class LabAgent:
                 },
                 version=prompt.version,
             )
-            # TODO (CP2): instrument retrieve() and FakeLLM.generate() as child
-            # observations. The nested generation must receive prompt, usage and cost.
             with propagate_attributes(prompt=prompt.managed_prompt):
-                response = self.llm.generate(prompt.text)
+                response, cost_usd = self._traced_generate(langfuse_client, prompt)
             quality_score = self._heuristic_quality(message, response.text, docs)
             latency_ms = int((time.perf_counter() - started) * 1000)
-            cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
+            trace_id = langfuse_client.get_current_trace_id()
 
         metrics.record_request(
             latency_ms=latency_ms,
@@ -96,7 +95,58 @@ class LabAgent:
             tokens_out=response.usage.output_tokens,
             cost_usd=cost_usd,
             quality_score=quality_score,
+            trace_id=trace_id,
         )
+
+    def _traced_retrieve(self, langfuse_client, message: str) -> list[str]:
+        # Child observation for RAG. Only a scrubbed preview of the query is captured.
+        with langfuse_client.start_as_current_observation(
+            name="retrieval",
+            as_type="retriever",
+            input={"query_preview": summarize_text(message)},
+        ) as span:
+            started = time.perf_counter()
+            try:
+                docs = retrieve(message)
+            except Exception as exc:
+                span.update(
+                    level="ERROR",
+                    status_message=type(exc).__name__,
+                    metadata={"retrieval_ms": int((time.perf_counter() - started) * 1000)},
+                )
+                raise
+            span.update(
+                output={"doc_count": len(docs)},
+                metadata={"retrieval_ms": int((time.perf_counter() - started) * 1000)},
+            )
+            return docs
+
+    def _traced_generate(self, langfuse_client, prompt) -> tuple[FakeResponse, float]:
+        # Child generation linked to the managed prompt version, with usage and cost.
+        # The compiled prompt contains the raw user message, so only a scrubbed preview is sent.
+        with langfuse_client.start_as_current_observation(
+            name="llm-generate",
+            as_type="generation",
+            model=self.model,
+            prompt=prompt.managed_prompt,
+            input={"prompt_preview": summarize_text(prompt.text, max_len=200)},
+            metadata={"prompt_version": prompt.version, "prompt_source": prompt.source},
+        ) as generation:
+            response = self.llm.generate(prompt.text)
+            cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
+            generation.update(
+                output={"answer_preview": summarize_text(response.text)},
+                usage_details={
+                    "input": response.usage.input_tokens,
+                    "output": response.usage.output_tokens,
+                },
+                cost_details={
+                    "input": round(response.usage.input_tokens / 1_000_000 * 3, 6),
+                    "output": round(response.usage.output_tokens / 1_000_000 * 15, 6),
+                },
+                metadata={"ttft_ms": response.ttft_ms},
+            )
+            return response, cost_usd
 
     def _estimate_cost(self, tokens_in: int, tokens_out: int) -> float:
         input_cost = (tokens_in / 1_000_000) * 3

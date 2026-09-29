@@ -1,0 +1,9 @@
+# Challenge day13-k4-l3a-monitoring-llmops-v1 — trace comparison (Langfuse v2 observations API)
+== INCIDENT req-8e311a56 trace e8bdcbad5eb1fa2c365cd19efe0020c2 (HTTP 200)
+  RETRIEVER  retrieval      start+      0ms dur=   2503ms level=DEFAULT {'correlation_id': 'req-8e311a56', 'retrieval_ms': 2500, 'feature': 'monitoring'}
+  AGENT      lab-agent-run  start+      0ms dur=   2657ms level=DEFAULT {'correlation_id': 'req-8e311a56', 'prompt_version': 1, 'feature': 'monitoring'}
+  GENERATION llm-generate   start+   2504ms dur=    153ms level=DEFAULT {'correlation_id': 'req-8e311a56', 'ttft_ms': 51, 'prompt_version': 1, 'feature': 'monitoring'}
+== NORMAL   req-fd21af12 trace e80ff986975d12e8cdccc868328cf87e (HTTP 200)
+  AGENT      lab-agent-run  start+      0ms dur=    168ms level=DEFAULT {'correlation_id': 'req-fd21af12', 'prompt_version': 1, 'feature': 'qa'}
+  GENERATION llm-generate   start+     13ms dur=    155ms level=DEFAULT {'correlation_id': 'req-fd21af12', 'ttft_ms': 50, 'prompt_version': 1, 'feature': 'qa'}
+  RETRIEVER  retrieval      start+     13ms dur=      0ms level=DEFAULT {'correlation_id': 'req-fd21af12', 'retrieval_ms': 0, 'feature': 'qa'}

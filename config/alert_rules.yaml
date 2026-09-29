@@ -1,25 +1,31 @@
 alerts:
-  - name: TODO_alert_1
-    severity: TODO
-    condition: TODO
-    duration: TODO
+  - name: HighLatencyP95
+    severity: P2
+    condition: 'percentile(latency_ms, 95) over response_sent > 3000 ms (SLO latency threshold)'
+    duration: 5m
     type: symptom-based
     channel: slack
-    owner: TODO
+    slack_channel: '#day13-llmops-alerts'
+    owner: llmops-oncall (Trần Anh Vũ)
+    slo: fast_successful_requests
     runbook: docs/alerts.md#alert-1
-  - name: TODO_alert_2
-    severity: TODO
-    condition: TODO
-    duration: TODO
+  - name: HighErrorRateOrRetrievalFailure
+    severity: P1
+    condition: 'count(request_failed) / count(request_received) * 100 > 2 OR retrieval success rate (tool_success) < 90%'
+    duration: 5m
     type: symptom-based
     channel: slack
-    owner: TODO
+    slack_channel: '#day13-llmops-critical'
+    owner: llmops-oncall (Trần Anh Vũ)
+    slo: fast_successful_requests
     runbook: docs/alerts.md#alert-2
-  - name: TODO_alert_3
-    severity: TODO
-    condition: TODO
-    duration: TODO
+  - name: CostPerRequestSpike
+    severity: P3
+    condition: 'avg(cost_usd) per response_sent > 0.004 USD (≈2x baseline 0.00196) OR projected daily cost > 2.5 USD'
+    duration: 15m
     type: symptom-based
     channel: slack
-    owner: TODO
+    slack_channel: '#day13-llmops-alerts'
+    owner: llmops-oncall (Trần Anh Vũ)
+    slo: guardrails.daily_cost_usd_max
     runbook: docs/alerts.md#alert-3
