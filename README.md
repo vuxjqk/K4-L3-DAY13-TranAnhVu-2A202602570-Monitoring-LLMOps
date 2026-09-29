@@ -152,7 +152,7 @@ git log -1 --oneline
 ```
 
 - [ ] Không có `.env`, secret, `.venv/`, PII thô hoặc evidence của học viên/lớp khác.
-- [ ] `submission/REPORT.md` đã đủ; mọi ảnh dùng đường dẫn tương đối và mở được.
+- [x] `submission/REPORT.md` đã đủ; mọi ảnh dùng đường dẫn tương đối và mở được.
 - [ ] Bạn demo và giải thích được luồng Metrics → Logs → Traces → Root cause.
 
 ## Tên repo bài nộp
